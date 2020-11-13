@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="css/bootstrap.min.css"></link>
+  <style type="text/css">
+    html, body {
+        height: 100%;
+        width: 100%;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .map {
+      width: 300px;
+
+    }
+    .map td {
+      width: 50px;
+      height: 100px;
+      line-height: 100px;
+      text-align: center;
+    }
+
+    .filled {
+      color: red;
+      font-weight: bold;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row mb-5">
+      <div class="col-12">
+        <b>Đề bài:</b> Có ô vuông to chia thành 9 ô vuông nhỏ 3 dọc x 3 ngang <br>
+        Hãy điền từ 1 đến 9 vào 9 ô vuông sao cho tổng hàng ngang, dọc, chéo là bằng nhau, bằng nhau bao nhiêu chưa biết và không được lặp <br>
+        Hãy tìm kết quả bằng lập trình : ngôn ngữ nào cũng được, ai làm ra kết quả chạy nhanh nhất trước 12h trưa mai sẽ được phần thưởng 200k từ ToiTX <br>
+        Mời anh em mại zô
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-4">
+        <div id="main"></div>
+      </div>
+      <div class="col-8">
+        <button type="button" class="btn btn-danger mb-5" onclick="nextStep()" style="display: flex;">Bước tiếp theo</button>
+        <div  class="card">
+          <div class="card-body" id="note">Bước 0: Chuẩn bị map 3-3 bản đồ huge.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript">
+  /**
+   * 2 9 4
+   * 7 5 3
+   * 6 1 8
+   */
+  let maps = [
+    [ '[0-0]' ,  '[0-1]' ,  '[0-2]' ],
+    [ '[1-0]' ,  '[1-1]' ,  '[1-2]' ],
+    [ '[2-0]' ,  '[2-1]' ,  '[2-2]' ],
+  ];
+
+  let total = (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9)/3;
+  let keyNumber;
+  let step = 0;
+
+  let stepNotes = {
+    1: 'Bước 1: Các vị trí [0-1],[1-2],[2-1],[1-0] luôn chỉ có tổng hàng dọc và hàng ngang(2 cặp số, tạm gọi là cặp A và B). Vì vậy chạy vòng lặp từ 1 đến 9 để tìm được số có 2 cặp số. Sau khi tìm được số (1), gán nó vào vị trí [0-1].',
+    2: 'Bước 2: Số (1) có 2 cặp số, 1 cặp cho tổng dọc, 1 cặp cho tổng ngang. Tìm tổng dọc trước, vị trí [2-1] có 2 cặp số. Tìm trong cặp A  số có 2 cặp số, Tìm được số (9). Vậy số (5) còn lại trong cặp A là số chính giữa [1-1]. Cặp B điền tự do vào [0-0], [0-2]',
+    3: 'Bước 3: Tìm vị trí [2-0]. Tổng 15 - ([1-1] + [0-2])',
+    4: 'Bước 4: Tìm vị trí [2-2]. Tổng 15 - ([2-0] + [2-1])',
+    5: 'Bước 5: Tìm vị trí [1-0]. Tổng 15 - ([0-0] + [2-0])',
+    6: 'Bước 6: Tìm vị trí [1-2]. Tổng 15 - ([1-0] + [1-1])'
+  };
+
+  function init () {
+    builHTML();
+  }
+
+  function nextStep () {
+    step++;
+    stepFx['step' + step]();
+    document.querySelector('#note').innerHTML = stepNotes[step];
+    builHTML();
+  }
+
+  let stepFx = {
+    // Find the center number
+    step1: function () {
+      for (let i=1; i <= 9; i++) {
+        keyNumber = getNumberGroup(i);
+        if (keyNumber.length == 2) {
+          maps[0][1] = i;
+          break;
+        }
+      }
+    },
+    step2: function () {
+      let isFound = false;
+      for (let i = 0; i < keyNumber.length; i++) {
+        if (!isFound && getNumberGroup(keyNumber[i][0]).length == 2) {
+          isFound = true;
+          maps[2][1] = keyNumber[i][0];
+          maps[1][1] = keyNumber[i][1];
+        } else {
+          maps[0][0] = keyNumber[i][0];
+        }
+
+        if (!isFound && getNumberGroup(keyNumber[i][1]).length == 2) {
+          isFound = true;
+          maps[2][1] = keyNumber[i][1];
+          maps[1][1] = keyNumber[i][0];
+        } else {
+          maps[0][2] = keyNumber[i][1];
+        }
+      }
+    },
+    step3: function () {
+      maps[2][0] = total - (maps[1][1] + maps[0][2]);
+    },
+    step4: function () {
+      maps[2][2] = total - (maps[2][0] + maps[2][1]);
+    },
+    step5: function () {
+      maps[1][0] = total - (maps[0][0] + maps[2][0]);
+    },
+    step6: function () {
+      maps[1][2] = total - (maps[1][0] + maps[1][1]);
+    },
+    step7 () {
+      window.alert('Bye');
+      window.close();
+    }
+  };
+
+  function getNumberGroup (number) {
+    let value = total - number;
+    let group = [];
+    let remainingValue;
+    let excepts = [number];
+
+    for(let i = 1; i <= 9; i++) {
+      remainingValue = value - i;
+      if (remainingValue <= 0) {
+        break;
+      }
+      if (remainingValue > 9 ||
+        excepts.indexOf(i) > -1 ||
+        excepts.indexOf(remainingValue) > -1 ||
+        group.length == 3 ||
+        i == remainingValue
+      ) {
+        continue;
+      }
+      excepts.push(remainingValue);
+      excepts.push(i);
+      group.push([remainingValue, i]);
+    }
+
+    return group;
+  }
+
+  // Build html
+  function builHTML () {
+    let html = '<table class="table table-bordered map">';
+    for(let i in maps) {
+      html += '<tr>';
+      for(let j in maps[i]) {
+        html += '<td class="' + (maps[i][j] >= 1 ? 'filled' : '') + '">' + maps[i][j] + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    document.querySelector('#main').innerHTML = html;
+  }
+
+  // Init
+  init();
+/**
+2 9 4
+7 5 3
+6 1 8
+
+---------
+
+1 9 5 giua 15 - 1 = 14
+1 8 6
+
+2 9 4
+2 8 5 goc 15 - 2 = 13
+2 7 6
+
+3 8 4 giua 15 - 3 = 12
+3 7 5
+
+4 9 2 goc
+4 8 3
+4 6 5
+
+5 9 1
+5 8 2 Chinh giua
+5 7 3
+5 6 4
+
+6 8 1 goc
+6 7 2
+6 5 4
+
+7 6 2 giua 15 - 7 = 8
+7 5 3
+
+8 6 1
+8 5 2 goc 15 - 8 = 7
+8 4 3
+
+9 5 1 giua 15 - 9 = 6
+9 4 2
+
+
+4 9 2
+x 5 x
+8 1 6
+
+15 - 9 = 6
+*/
+</script>
+</html>
+
+
+
